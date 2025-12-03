@@ -28,10 +28,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.style.TextAlign
-import ap.mobile.ecohabit.ui.eco_target.EcoTargetRepository.remainingDays
-import kotlin.collections.first
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -40,9 +40,19 @@ fun EcoTargetScreen(
     onNavigateHistory: () -> Unit,
     viewModel: EcoTargetViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    viewModel.loadHistoryById("current")
+// pertama kali aplikasi dibuka → load weekly dulu
+    LaunchedEffect(Unit) {
+        viewModel.loadWeeklyHistory()
+    }
+// setelah weekly berhasil ter-load → load daily-nya
+    val currentWeek = viewModel.currentWeekHistory.collectAsState().value
+    LaunchedEffect(currentWeek?.id) {
+        if (currentWeek != null) {
+            viewModel.loadDailyData()
+        }
+    }
 
-    val history = viewModel.selectedHistory.collectAsState().value
+    val history = viewModel.currentWeekHistory.collectAsState().value
     val carbonTarget = viewModel.carbonTarget
     val quizTarget = viewModel.quizTarget
     val remainingDays = viewModel.remainingDays
@@ -50,6 +60,8 @@ fun EcoTargetScreen(
     val quizTotal = history?.quizTotal ?: 0f
     val carbonProgress = (carbonTotal / carbonTarget).coerceIn(0f, 1f)
     val quizProgress = (quizTotal / quizTarget).coerceIn(0f, 1f)
+    val dailyCarbon by viewModel.dailyCarbon.collectAsState()
+    val dailyQuiz by viewModel.dailyQuiz.collectAsState()
 
 
     Scaffold(
@@ -234,7 +246,7 @@ fun EcoTargetScreen(
                     Column(
                         modifier = Modifier.padding(16.dp),
                     ) {
-                        WeeklyCarbonChart(data = EcoTargetRepository.carbonDailyData)
+                        WeeklyCarbonChart (data = dailyCarbon)
                     }
                 }
             }
@@ -251,10 +263,16 @@ fun EcoTargetScreen(
                     Column(
                         modifier = Modifier.padding(16.dp),
                     ) {
-                        DailyPointChart(data = EcoTargetRepository.quizDailyData)
+                        DailyPointChart(data = dailyQuiz)
                     }
                 }
             }
+            Button(onClick = {
+                viewModel.syncTotals(history!!.id)
+            }) {
+                Text("Sync Total")
+            }
         }
+
     }
 }

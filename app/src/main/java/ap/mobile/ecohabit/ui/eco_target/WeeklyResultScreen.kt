@@ -23,10 +23,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun WeeklyResultScreen(
     history: EcoTargetRepository.WeeklyHistory,
     onBack: () -> Unit,
+    viewModel: EcoTargetViewModel
 ) {
     WeeklyResultContent(
     history = history,
-    onBack = onBack
+    onBack = onBack,
+    viewModel = viewModel
     )
 }
 
@@ -34,7 +36,8 @@ fun WeeklyResultScreen(
 @Composable
 fun WeeklyResultContent(
     history: EcoTargetRepository.WeeklyHistory,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: EcoTargetViewModel
 ) {
     Scaffold(
         topBar = {
@@ -160,7 +163,8 @@ fun WeeklyResultContent(
 
                     Button(
                         onClick = {
-                            history.motivation = motivation
+                            viewModel.syncTotals(history.id)
+                            viewModel.saveMotivation(history.id, motivation)
                             onBack()
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -185,3 +189,5 @@ fun SummaryRow(label: String, value: String) {
         Text(text = value, fontWeight = FontWeight.Medium)
     }
 }
+
+

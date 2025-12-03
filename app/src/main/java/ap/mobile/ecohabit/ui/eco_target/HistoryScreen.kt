@@ -19,8 +19,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.lifecycle.viewmodel.compose.viewModel
 import ap.mobile.ecohabit.R
 
 
@@ -29,9 +34,21 @@ import ap.mobile.ecohabit.R
 @Composable
 fun HistoryScreen(
     onBack: () -> Unit,
-    historyList: List<EcoTargetRepository.WeeklyHistory>,
-    onClickItem: (String) -> Unit
+    onClickItem: (String) -> Unit,
+    viewModel: EcoTargetViewModel = viewModel()
 ) {
+    val historyList by viewModel.historyList.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadWeeklyHistory()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.loadWeeklyHistory()
+        }
+    }
+
     val listState = rememberLazyListState()
     Scaffold(
         topBar = {

@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="ap.mobile.ecohabit" />
+                  <option name="mobileSdkAppId" value="1:540985125266:android:d6858ac4ab4381ce95394b" />
+                  <option name="projectId" value="ecohabit-39d48" />
+                  <option name="projectNumber" value="540985125266" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

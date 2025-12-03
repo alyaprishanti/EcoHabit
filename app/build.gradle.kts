@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+//    id("com.android.application")
+    // Add the Google services Gradle plugin
+//    id("com.google.gms.google-services")
 }
 
 android {
@@ -42,7 +45,29 @@ android {
 
 dependencies {
 
+
     coreLibraryDesugaring ("com.android.tools:desugar_jdk_libs:2.0.4")
+
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Import the Firebase BoM
+    implementation (platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation ("com.google.firebase:firebase-firestore-ktx")
+    // Storage
+    implementation("com.google.firebase:firebase-storage-ktx")
+    // Auth (opsional)
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    // Retrofit + GSON converter
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    // Coroutines
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    // Coil untuk Compose (image loading)
+    implementation ("io.coil-kt:coil-compose:2.4.0")
+    // (opsional) OkHttp logging
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

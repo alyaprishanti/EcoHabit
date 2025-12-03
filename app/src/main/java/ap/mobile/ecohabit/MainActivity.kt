@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.compose.NavHost
@@ -28,7 +29,7 @@ class MainActivity : ComponentActivity() {
             EcoHabitTheme {
                 val navController = rememberNavController()
                 val viewModel: EcoTargetViewModel = viewModel()
-
+                LaunchedEffect(Unit) { viewModel.loadWeeklyHistory() }
 
                 NavHost(
                     navController = navController,
@@ -37,39 +38,26 @@ class MainActivity : ComponentActivity() {
 
                     // Eco Target
                     composable("eco_target") {
-                        EcoTargetScreen(
-                            onNavigateHistory = {
-                                navController.navigate("history")
-                            }
-                        )
+                        EcoTargetScreen(onNavigateHistory = { navController.navigate("history") }, viewModel = viewModel)
                     }
 
-                    // History
                     composable("history") {
-                        val viewModel: EcoTargetViewModel = viewModel()
-                        val historyList by viewModel.historyList.collectAsState()
                         HistoryScreen(
                             onBack = { navController.popBackStack() },
-                            historyList = historyList,
-                            onClickItem = { id ->
-                                navController.navigate("weekly_result/$id")
-                            }
+                            onClickItem = { id -> navController.navigate("weekly_result/$id") },
+                            viewModel = viewModel
                         )
                     }
 
-                    // Weekly Result
                     composable("weekly_result/{id}") { backStackEntry ->
-                        val id = backStackEntry.arguments?.getString("id") ?: "0"
-
-                        // Load data untuk screen ini
-                        viewModel.loadHistoryById(id)
-
-                        val summary = viewModel.selectedHistory.collectAsState().value
-
+                        val id = backStackEntry.arguments?.getString("id") ?: return@composable
+                        LaunchedEffect(id) { viewModel.loadHistoryById(id) }
+                        val summary by viewModel.selectedHistory.collectAsState()
                         if (summary != null) {
                             WeeklyResultScreen(
-                                history = summary,
-                                onBack = { navController.popBackStack() }
+                                history = summary!!,
+                                onBack = { navController.popBackStack() },
+                                viewModel = viewModel
                             )
                         }
                     }
