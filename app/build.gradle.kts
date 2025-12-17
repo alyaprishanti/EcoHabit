@@ -69,6 +69,11 @@ dependencies {
     // (opsional) OkHttp logging
     implementation ("com.squareup.okhttp3:logging-interceptor:4.11.0")
 
+    // ui tambahan
+    implementation("androidx.compose.ui:ui:1.5.0")
+    implementation("androidx.compose.material:material:1.5.0")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.5.0")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
