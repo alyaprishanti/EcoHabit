@@ -79,13 +79,4 @@ class EcoTargetViewModel : ViewModel() {
             _dailyQuiz.value = daily.map { it.quiz.toFloat() }
         }
     }
-
-
-
-
-
-
-
-
-
 }

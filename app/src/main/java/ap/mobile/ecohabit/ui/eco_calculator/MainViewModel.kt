@@ -1,7 +1,10 @@
 package ap.mobile.ecohabit.ui.eco_calculator
 
+import DateUtils.currentWeekId
+import DateUtils.todayDateId
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import ap.mobile.ecohabit.data.EcoTargetRestRepository
 import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,6 +64,17 @@ class MainViewModel(
                 // (we don't change UI here; you can expand later)
                 println("Failed saving to Firestore: $message")
             }
+        }
+        val dateId = todayDateId()
+        val weekId = currentWeekId()
+
+        viewModelScope.launch {
+            EcoTargetRestRepository.createOrUpdateDaily(
+                weekId = weekId,
+                dateId = dateId,
+                carbon = result.totalKgCO2e.toFloat(),
+                quiz = 0 // quiz mungkin belum ada
+            )
         }
     }
 

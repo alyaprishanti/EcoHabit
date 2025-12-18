@@ -1,10 +1,16 @@
 package ap.mobile.ecohabit.viewmodel
 
+import DateUtils.currentWeekId
+import DateUtils.todayDateId
+import android.R.attr.data
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import ap.mobile.ecohabit.data.EcoTargetRestRepository
 import ap.mobile.ecohabit.data.QuizHistoryEntry
 import ap.mobile.ecohabit.data.QuizQuestion
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -55,35 +61,25 @@ class QuizViewModel : ViewModel() {
     }
 
     private fun recordQuizResult() {
-        val currentDate = SimpleDateFormat(
-            "dd MMMM yyyy, HH:mm",
-            Locale.getDefault()
-        ).format(Date())
+        val scoreValue = score.value
+        val dateId = todayDateId()
+        val weekId = currentWeekId()
 
-        val newEntry = QuizHistoryEntry(
-            score = score.value,
-            category = getCategory(),
-            date = currentDate
-        )
-
-        // SIMPAN KE FIREBASE
-        val data = hashMapOf(
-            "score" to newEntry.score,
-            "category" to newEntry.category,
-            "date" to newEntry.date
-        )
-
+        // existing firebase save
         db.collection("quiz_results")
             .add(data)
             .addOnSuccessListener {
-                println("Berhasil simpan ke Firebase")
-            }
-            .addOnFailureListener {
-                println("Gagal simpan: ${it.message}")
-            }
 
-        // SIMPAN KE UI (LOCAL)
-        quizHistory.value = listOf(newEntry) + quizHistory.value
+                // 🔽 TAMBAHAN DAILY RECORD
+                viewModelScope.launch {
+                    EcoTargetRestRepository.createOrUpdateDaily(
+                        weekId = weekId,
+                        dateId = dateId,
+                        carbon = 0f, // carbon mungkin sudah diisi calculator
+                        quiz = scoreValue
+                    )
+                }
+            }
     }
 
 

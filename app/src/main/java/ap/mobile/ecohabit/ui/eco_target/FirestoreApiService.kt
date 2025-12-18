@@ -33,15 +33,6 @@ interface FirestoreApiService {
         @Body body: JsonObject
     ): JsonObject
 
-    // list daily documents
-    @GET("projects/{projectId}/databases/(default)/documents/{weeklyCollection}/{weekId}/daily")
-    suspend fun listDaily(
-        @Path("projectId") projectId: String,
-        @Path("weeklyCollection") weeklyCollection: String, // weeklyHistory
-        @Path("weekId") weekId: String,
-        @Query("key") apiKey: String
-    ): JsonObject
-
     // create or set daily document (custom id)
     @POST("projects/{projectId}/databases/(default)/documents/{weeklyCollection}/{weekId}/daily?documentId={dateId}")
     suspend fun createDailyWithId(
@@ -49,6 +40,29 @@ interface FirestoreApiService {
         @Path("weeklyCollection") weeklyCollection: String,
         @Path("weekId") weekId: String,
         @Path("dateId") dateId: String, // yyyy-MM-dd
+        @Query("key") apiKey: String,
+        @Body body: JsonObject
+    ): JsonObject
+
+    @POST("projects/{projectId}/databases/(default)/documents:runQuery")
+    suspend fun runQuery(
+        @Path("projectId") projectId: String,
+        @Query("key") apiKey: String,
+        @Body body: JsonObject
+    ): JsonArray
+
+    // GET all daily records
+    @GET("projects/{projectId}/databases/(default)/documents/{collection}")
+    suspend fun listDailyRecords(
+        @Path("projectId") projectId: String,
+        @Path("collection") collection: String,  // dailyRecords
+        @Query("key") apiKey: String
+    ): JsonObject
+
+    @POST("projects/{projectId}/databases/(default)/documents/{collection}")
+    suspend fun createDocument(
+        @Path("projectId") projectId: String,
+        @Path("collection") collection: String,
         @Query("key") apiKey: String,
         @Body body: JsonObject
     ): JsonObject
@@ -63,29 +77,13 @@ interface FirestoreApiService {
         @Body body: JsonObject
     ): JsonObject
 
-    @POST("projects/{projectId}/databases/(default)/documents:runQuery")
-    suspend fun runQuery(
+    // list daily documents
+    @GET("projects/{projectId}/databases/(default)/documents/{weeklyCollection}/{weekId}/daily")
+    suspend fun listDaily(
         @Path("projectId") projectId: String,
-        @Query("key") apiKey: String,
-        @Body body: JsonObject
-    ): JsonArray
-
-
-    // GET all daily records
-    @GET("projects/{projectId}/databases/(default)/documents/{collection}")
-    suspend fun listDailyRecords(
-        @Path("projectId") projectId: String,
-        @Path("collection") collection: String,  // dailyRecords
+        @Path("weeklyCollection") weeklyCollection: String, // weeklyHistory
+        @Path("weekId") weekId: String,
         @Query("key") apiKey: String
-    ): JsonObject
-
-
-    @POST("projects/{projectId}/databases/(default)/documents/{collection}")
-    suspend fun createDocument(
-        @Path("projectId") projectId: String,
-        @Path("collection") collection: String,
-        @Query("key") apiKey: String,
-        @Body body: JsonObject
     ): JsonObject
 
 }
