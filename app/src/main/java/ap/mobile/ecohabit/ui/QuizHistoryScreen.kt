@@ -60,7 +60,7 @@ fun QuizHistoryScreen(
         } else {
             LazyColumn(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxSize() // WAJIB
                     .background(Color(0xFFF5F5F5))
                     .padding(paddingValues),
                 contentPadding = PaddingValues(16.dp),

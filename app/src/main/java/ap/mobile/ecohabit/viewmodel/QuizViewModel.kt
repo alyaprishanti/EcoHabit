@@ -50,6 +50,7 @@ class QuizViewModel : ViewModel() {
     var weeklyProgress = mutableStateOf(0)
     val quizHistory = mutableStateOf<List<QuizHistoryEntry>>(emptyList())
 
+
     fun startQuiz() {
         currentIndex.value = 0
         selectedAnswer.value = -1
@@ -58,32 +59,27 @@ class QuizViewModel : ViewModel() {
     }
 
     private fun recordQuizResult() {
-        val scoreValue = score.value
-        val dateId = todayDateId()
-        val weekId = currentWeekId()
+        val currentDate = SimpleDateFormat(
+            "dd MMMM yyyy, HH:mm",
+            Locale.getDefault()
+        ).format(Date())
 
-        // ✅ DATA HARUS MAP / OBJECT
-        val quizData = mapOf(
-            "score" to scoreValue,
-            "dateId" to dateId,
-            "weekId" to weekId,
-            "createdAt" to System.currentTimeMillis()
+        val newEntry = QuizHistoryEntry(
+            score = score.value,
+            category = getCategory(),
+            date = currentDate
         )
 
-        db.collection("quiz_results")
-            .add(quizData)
-            .addOnSuccessListener {
-                // 🔽 UPDATE DAILY RECORD (EcoTarget)
-                viewModelScope.launch {
-                    EcoTargetRestRepository.createOrUpdateDaily(
-                        dateId = dateId,
-                        weekId = weekId,
-                        carbon = null,
-                        quiz = scoreValue
-                    )
-                }
-            }
+        // tampil di aplikasi
+        quizHistory.value = listOf(newEntry) + quizHistory.value
+
+        // upload ke Firebase
+        FirebaseFirestore.getInstance()
+            .collection("quiz_results")
+            .add(newEntry)
     }
+
+
 
 
     fun submitAnswer(): Boolean {
@@ -124,4 +120,23 @@ class QuizViewModel : ViewModel() {
             false
         }
     }
+
+    fun loadQuizHistory() {
+        db.collection("quiz_history")
+            .get()
+            .addOnSuccessListener { result ->
+                val list = result.map {
+                    QuizHistoryEntry(
+                        score = it.getLong("score")?.toInt() ?: 0,
+                        category = it.getString("category") ?: "",
+                        date = it.getString("date") ?: ""
+                    )
+                }
+                quizHistory.value = list
+            }
+    }
+
 }
+
+
+

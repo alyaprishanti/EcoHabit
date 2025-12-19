@@ -104,14 +104,16 @@ fun QuizNavGraph() {
             )
         }
 
-        composable("history") { // Definisi tujuan navigasi
+        composable("history") {
+            vm.loadQuizHistory()
             QuizHistoryScreen(
                 history = vm.quizHistory.value,
-                onBack = {
-                    nav.popBackStack() // Aksi untuk tombol kembali
-                }
+                onBack = { nav.popBackStack() }
             )
         }
+
+
+    }
     }
 
-}
+
