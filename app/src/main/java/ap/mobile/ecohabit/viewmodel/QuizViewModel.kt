@@ -62,6 +62,7 @@ class QuizViewModel : ViewModel() {
         val dateId = todayDateId()
         val weekId = currentWeekId()
 
+        // ✅ DATA HARUS MAP / OBJECT
         val quizData = mapOf(
             "score" to scoreValue,
             "dateId" to dateId,
