@@ -19,9 +19,6 @@ import ap.mobile.ecohabit.ui.theme.EcoHabitTheme
 import ap.mobile.ecohabit.ui.eco_target.EcoTargetScreen
 import ap.mobile.ecohabit.ui.eco_target.HistoryScreen
 import ap.mobile.ecohabit.ui.eco_target.WeeklyResultScreen
-import ap.mobile.ecohabit.ui.eco_target.WeeklyCarbonChart
-import ap.mobile.ecohabit.ui.eco_target.DailyPointChart
-import ap.mobile.ecohabit.ui.eco_target.EcoTargetRepository
 
 class EcoTargetActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

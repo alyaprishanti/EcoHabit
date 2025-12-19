@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
 object EcoTargetRestRepository {
     private const val PROJECT_ID = "ecohabit-39d48"
     private const val COLLECTION = "weeklyHistory"
-    // Use your API key (for development). For production, use OAuth bearer from backend or Google Sign-In.
     private const val API_KEY = "AIzaSyCQ-XSY-SnLtMR-BAkHkx4XV3NhE_s_2Pw"
 
     private val api = FirestoreRestClient.api
@@ -131,69 +130,6 @@ object EcoTargetRestRepository {
         response.toEntity()
     }
 
-    private fun buildDailyRequest(
-        carbon: Float,
-        quiz: Int
-    ): JsonObject {
-
-        val fields = JsonObject().apply {
-            add("carbon", JsonObject().apply {
-                addProperty("doubleValue", carbon)
-            })
-            add("quiz", JsonObject().apply {
-                addProperty("integerValue", quiz)
-            })
-        }
-
-        return JsonObject().apply {
-            add("fields", fields)
-        }
-    }
-
-    suspend fun fetchDailyFromWeekly(
-        weekId: String
-    ): List<EcoTargetRepository.DailyData> = withContext(Dispatchers.IO) {
-
-        val json = api.listDaily(
-            projectId = PROJECT_ID,
-            weeklyCollection = "weeklyHistory",
-            weekId = weekId,
-            apiKey = API_KEY
-        )
-
-        val docs = json.getAsJsonArray("documents") ?: return@withContext emptyList()
-        val result = mutableListOf<EcoTargetRepository.DailyData>()
-
-        for (docElem in docs) {
-            val doc = docElem.asJsonObject
-            val fields = doc.getAsJsonObject("fields") ?: continue
-
-            val dateId =
-                fields["dateId"]?.asJsonObject?.get("stringValue")?.asString
-                    ?: doc["name"]?.asString?.substringAfterLast("/")
-                    ?: ""
-
-            val carbon =
-                fields["carbon"]?.asJsonObject?.get("doubleValue")?.asDouble?.toFloat()
-                    ?: 0f
-
-            val quiz =
-                fields["quiz"]?.asJsonObject?.get("integerValue")?.asString?.toIntOrNull()
-                    ?: 0
-
-            result.add(
-                EcoTargetRepository.DailyData(
-                    dateId = dateId,
-                    carbon = carbon,
-                    quiz = quiz,
-                    weekId = weekId
-                )
-            )
-        }
-
-        result.sortedBy { it.dateId }
-    }
-
     private suspend fun upsertWeeklyHistory(weekId: String) {
 
         val fields = JsonObject().apply {
@@ -293,30 +229,6 @@ object EcoTargetRestRepository {
         upsertWeeklyHistory(weekId)
     }
 
-
-
-
-    suspend fun createDaily(dateId: String, carbon: Float, quiz: Int, weekId: String) =
-        withContext(Dispatchers.IO) {
-
-            val fields = JsonObject().apply {
-                add("dateId", JsonObject().apply { addProperty("stringValue", dateId) })
-                add("weekId", JsonObject().apply { addProperty("stringValue", weekId) })
-                add("carbon", JsonObject().apply { addProperty("doubleValue", carbon) })
-                add("quiz", JsonObject().apply { addProperty("integerValue", quiz) })
-            }
-
-            val body = JsonObject().apply { add("fields", fields) }
-
-            api.createDocument(
-                projectId = PROJECT_ID,
-                collection = "dailyRecords",
-                apiKey = API_KEY,
-                body = body
-            )
-        }
-
-
     suspend fun updateWeeklyTotalsFromDaily(weekId: String) = withContext(Dispatchers.IO) {
 
         val daily = listDailyByWeek(weekId)
@@ -342,44 +254,6 @@ object EcoTargetRestRepository {
             body
         )
     }
-
-    // EcoTargetRestRepository.kt
-    suspend fun fetchDailyForWeek(weekId: String): List<EcoTargetRepository.DailyData> =
-        withContext(Dispatchers.IO) {
-
-            val json = api.listDocuments(
-                projectId = PROJECT_ID,
-                collection = "dailyRecords",     // <--- COLLECTION BARU
-                apiKey = API_KEY
-            )
-
-            val docs = json.getAsJsonArray("documents") ?: return@withContext emptyList()
-            val result = mutableListOf<EcoTargetRepository.DailyData>()
-
-            for (elem in docs) {
-                val obj = elem.asJsonObject
-                val fields = obj.getAsJsonObject("fields") ?: JsonObject()
-
-                val dateId = fields["dateId"]?.asJsonObject?.get("stringValue")?.asString ?: ""
-                val carbon = fields["carbon"]?.asJsonObject?.get("doubleValue")?.asDouble?.toFloat() ?: 0f
-                val quiz = fields["quiz"]?.asJsonObject?.get("integerValue")?.asString?.toIntOrNull() ?: 0
-                val week = fields["weekId"]?.asJsonObject?.get("stringValue")?.asString ?: ""
-
-                if (week == weekId) {
-                    result.add(
-                        EcoTargetRepository.DailyData(
-                            dateId = dateId,
-                            carbon = carbon,
-                            quiz = quiz,
-                            weekId = week
-                        )
-                    )
-                }
-            }
-            result.sortedBy { it.dateId }
-        }
-
-
 
     fun JsonObject.toEntity(): WeeklyHistory {
         val fields = this.getAsJsonObject("fields")
@@ -447,7 +321,7 @@ object EcoTargetRestRepository {
                     ?.asJsonObject
                     ?.get("stringValue")
                     ?.asString
-                    ?: continue   // ⛔ dateId wajib
+                    ?: continue
 
                 val carbon = fields["carbon"]
                     ?.asJsonObject
@@ -476,38 +350,5 @@ object EcoTargetRestRepository {
 
             result.sortedBy { it.dateId }
         }
-
-
-
-    suspend fun fetchAllDaily(): List<EcoTargetRepository.DailyData> =
-        withContext(Dispatchers.IO) {
-
-            val json = api.listDailyRecords(PROJECT_ID, "dailyRecords", API_KEY)
-            val docs = json.getAsJsonArray("documents") ?: return@withContext emptyList()
-
-            val list = mutableListOf<EcoTargetRepository.DailyData>()
-
-            for (item in docs) {
-                val doc = item.asJsonObject
-                val fields = doc.getAsJsonObject("fields") ?: continue
-
-                val dateId = fields["dateId"]?.asJsonObject?.get("stringValue")?.asString ?: ""
-                val weekId = fields["weekId"]?.asJsonObject?.get("stringValue")?.asString ?: ""
-                val carbon = fields["carbon"]?.asJsonObject?.get("doubleValue")?.asDouble?.toFloat() ?: 0f
-                val quiz = fields["quiz"]?.asJsonObject?.get("integerValue")?.asString?.toInt() ?: 0
-
-                list.add(
-                    EcoTargetRepository.DailyData(
-                        dateId = dateId,
-                        carbon = carbon,
-                        quiz = quiz,
-                        weekId = weekId
-                    )
-                )
-            }
-
-            list
-        }
-
 
 }

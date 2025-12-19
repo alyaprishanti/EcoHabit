@@ -39,11 +39,9 @@ fun EcoTargetScreen(
     onNavigateHistory: () -> Unit,
     viewModel: EcoTargetViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-// pertama kali aplikasi dibuka → load weekly dulu
     LaunchedEffect(Unit) {
         viewModel.loadWeeklyHistory()
     }
-// setelah weekly berhasil ter-load → load daily-nya
     val currentWeek = viewModel.currentWeekHistory.collectAsState().value
     LaunchedEffect(currentWeek?.id) {
         if (currentWeek != null) {
@@ -108,9 +106,6 @@ fun EcoTargetScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
 
-            // ===============================
-            // SECTION: TARGET MINGGUAN
-            // ===============================
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val currentWeekRange = DateUtils.getCurrentWeekRange()
                 Text(
@@ -172,9 +167,6 @@ fun EcoTargetScreen(
                 }
             }
 
-            // ===============================
-            // SECTION: PROGRESS
-            // ===============================
             Column (verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(

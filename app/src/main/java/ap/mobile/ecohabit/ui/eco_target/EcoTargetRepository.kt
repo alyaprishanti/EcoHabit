@@ -34,16 +34,11 @@ object EcoTargetRepository {
     val weekDates: List<LocalDate> =
         (0..6).map { today.minusDays((6 - it).toLong()) }
 
-    val carbonDailyData = listOf(5f, 3f, 4f, 3f, 2f, 2f, 4f)
-    val quizDailyData = listOf(10f, 20f, 15f, 25f, 30f, 40f, 35f)
 
     const val carbonWeeklyTarget = 25
     const val quizWeeklyTarget = 200
 
     val orderedWeekDates = weekDates.sortedBy { it.dayOfWeek.value }
 
-    val weekDayLabels = orderedWeekDates.map {
-        it.dayOfWeek.name.take(3)
-    }
 
 }

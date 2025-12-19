@@ -4,11 +4,9 @@ import java.time.temporal.TemporalAdjusters
 
 object DateUtils {
 
-    // yyyy-MM-dd → untuk documentId dailyRecords
     fun todayDateId(): String =
         LocalDate.now().toString()
 
-    // yyyy-MM-dd (Monday) → untuk weekId
     fun currentWeekId(): String {
         val today = LocalDate.now()
         val monday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))

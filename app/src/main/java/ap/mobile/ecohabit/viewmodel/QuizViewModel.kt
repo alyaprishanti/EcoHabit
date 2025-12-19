@@ -61,8 +61,6 @@ class QuizViewModel : ViewModel() {
         val scoreValue = score.value
         val dateId = todayDateId()
         val weekId = currentWeekId()
-
-        // ✅ DATA HARUS MAP / OBJECT
         val quizData = mapOf(
             "score" to scoreValue,
             "dateId" to dateId,
@@ -73,7 +71,6 @@ class QuizViewModel : ViewModel() {
         db.collection("quiz_results")
             .add(quizData)
             .addOnSuccessListener {
-                // 🔽 UPDATE DAILY RECORD (EcoTarget)
                 viewModelScope.launch {
                     EcoTargetRestRepository.createOrUpdateDaily(
                         dateId = dateId,
@@ -124,4 +121,19 @@ class QuizViewModel : ViewModel() {
             false
         }
     }
+
+    fun loadQuizHistory() {
+        db.collection("quiz_results")
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null) return@addSnapshotListener
+
+                val list = snapshot.documents.mapNotNull {
+                    it.toObject(QuizHistoryEntry::class.java)
+                }
+
+                quizHistory.value = list
+            }
+    }
+
 }

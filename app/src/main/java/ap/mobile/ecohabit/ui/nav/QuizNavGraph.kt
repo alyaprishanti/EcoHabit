@@ -1,6 +1,7 @@
 package ap.mobile.ecohabit.ui.nav
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.*
 import ap.mobile.ecohabit.ui.QuizFeedbackCorrectScreen
@@ -105,12 +106,17 @@ fun QuizNavGraph() {
         }
 
         composable("history") {
-            vm.loadQuizHistory()
+
+            LaunchedEffect(Unit) {
+                vm.loadQuizHistory()
+            }
+
             QuizHistoryScreen(
                 history = vm.quizHistory.value,
                 onBack = { nav.popBackStack() }
             )
         }
+
 
 
     }

@@ -103,16 +103,11 @@ fun HistoryItemCard(entry: QuizHistoryEntry, onClick: () -> Unit) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = entry.date,
+                    text = entry.dateId,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    text = " ${entry.category}",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
             }
             Text(
                 text = "${entry.score}/50",
