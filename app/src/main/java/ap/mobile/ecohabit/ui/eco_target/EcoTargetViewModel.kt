@@ -17,11 +17,13 @@ class EcoTargetViewModel : ViewModel() {
 
     private val _selectedHistory = MutableStateFlow<EcoTargetRepository.WeeklyHistory?>(null)
     val selectedHistory: StateFlow<EcoTargetRepository.WeeklyHistory?> = _selectedHistory.asStateFlow()
-    private val _dailyCarbon = MutableStateFlow<List<Float>>(emptyList())
-    val dailyCarbon: StateFlow<List<Float>> = _dailyCarbon
+    private val _dailyCarbon =
+        MutableStateFlow<List<Pair<String, Float>>>(emptyList())
+    val dailyCarbon: StateFlow<List<Pair<String, Float>>> = _dailyCarbon
 
-    private val _dailyQuiz = MutableStateFlow<List<Float>>(emptyList())
-    val dailyQuiz: StateFlow<List<Float>> = _dailyQuiz
+    private val _dailyQuiz =
+        MutableStateFlow<List<Pair<String, Float>>>(emptyList())
+    val dailyQuiz: StateFlow<List<Pair<String, Float>>> = _dailyQuiz
 
     private val _currentWeekHistory = MutableStateFlow<EcoTargetRepository.WeeklyHistory?>(null)
     val currentWeekHistory: StateFlow<EcoTargetRepository.WeeklyHistory?> = _currentWeekHistory.asStateFlow()
@@ -72,11 +74,18 @@ class EcoTargetViewModel : ViewModel() {
     fun loadDailyData() {
         viewModelScope.launch {
             val weekId = _currentWeekHistory.value?.id ?: return@launch
-
             val daily = repo.listDailyByWeek(weekId)
 
-            _dailyCarbon.value = daily.map { it.carbon }
-            _dailyQuiz.value = daily.map { it.quiz.toFloat() }
+            val sorted = daily.sortedBy { it.dateId }
+
+            _dailyCarbon.value = sorted.map {
+                it.dateId to it.carbon
+            }
+
+            _dailyQuiz.value = sorted.map {
+                it.dateId to it.quiz.toFloat()
+            }
+
         }
     }
 }

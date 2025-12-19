@@ -131,16 +131,170 @@ object EcoTargetRestRepository {
         response.toEntity()
     }
 
-    suspend fun createOrUpdateDaily(weekId: String, dateId: String, carbon: Float, quiz: Int) = withContext(Dispatchers.IO) {
+    private fun buildDailyRequest(
+        carbon: Float,
+        quiz: Int
+    ): JsonObject {
+
         val fields = JsonObject().apply {
-            add("carbon", JsonObject().apply { addProperty("doubleValue", carbon) })
-            add("quiz", JsonObject().apply { addProperty("integerValue", quiz.toString()) })
+            add("carbon", JsonObject().apply {
+                addProperty("doubleValue", carbon)
+            })
+            add("quiz", JsonObject().apply {
+                addProperty("integerValue", quiz)
+            })
         }
+
+        return JsonObject().apply {
+            add("fields", fields)
+        }
+    }
+
+    suspend fun fetchDailyFromWeekly(
+        weekId: String
+    ): List<EcoTargetRepository.DailyData> = withContext(Dispatchers.IO) {
+
+        val json = api.listDaily(
+            projectId = PROJECT_ID,
+            weeklyCollection = "weeklyHistory",
+            weekId = weekId,
+            apiKey = API_KEY
+        )
+
+        val docs = json.getAsJsonArray("documents") ?: return@withContext emptyList()
+        val result = mutableListOf<EcoTargetRepository.DailyData>()
+
+        for (docElem in docs) {
+            val doc = docElem.asJsonObject
+            val fields = doc.getAsJsonObject("fields") ?: continue
+
+            val dateId =
+                fields["dateId"]?.asJsonObject?.get("stringValue")?.asString
+                    ?: doc["name"]?.asString?.substringAfterLast("/")
+                    ?: ""
+
+            val carbon =
+                fields["carbon"]?.asJsonObject?.get("doubleValue")?.asDouble?.toFloat()
+                    ?: 0f
+
+            val quiz =
+                fields["quiz"]?.asJsonObject?.get("integerValue")?.asString?.toIntOrNull()
+                    ?: 0
+
+            result.add(
+                EcoTargetRepository.DailyData(
+                    dateId = dateId,
+                    carbon = carbon,
+                    quiz = quiz,
+                    weekId = weekId
+                )
+            )
+        }
+
+        result.sortedBy { it.dateId }
+    }
+
+    private suspend fun upsertWeeklyHistory(weekId: String) {
+
+        val fields = JsonObject().apply {
+            add("weekLabel", JsonObject().apply {
+                addProperty("stringValue", weekId)
+            })
+            add("carbonTarget", JsonObject().apply {
+                addProperty("integerValue", carbonWeeklyTarget)
+            })
+            add("quizTarget", JsonObject().apply {
+                addProperty("integerValue", quizWeeklyTarget)
+            })
+            add("carbonTotal", JsonObject().apply {
+                addProperty("doubleValue", 0)
+            })
+            add("quizTotal", JsonObject().apply {
+                addProperty("doubleValue", 0)
+            })
+            add("carbonAchieved", JsonObject().apply {
+                addProperty("booleanValue", false)
+            })
+            add("quizAchieved", JsonObject().apply {
+                addProperty("booleanValue", false)
+            })
+            add("improvement", JsonObject().apply {
+                addProperty("integerValue", 0)
+            })
+            add("motivation", JsonObject().apply {
+                addProperty("stringValue", "")
+            })
+        }
+
+        val body = JsonObject().apply {
+            add("fields", fields)
+        }
+
+        api.patchDocument(
+            projectId = PROJECT_ID,
+            collection = "weeklyHistory",
+            documentId = weekId,
+            apiKey = API_KEY,
+            updateMask = fields.keySet().toList(),
+            body = body
+        )
+    }
+
+    suspend fun createOrUpdateDaily(
+        dateId: String,
+        weekId: String,
+        carbon: Float?,
+        quiz: Int?
+    ) = withContext(Dispatchers.IO) {
+
+        val fields = JsonObject().apply {
+            add("dateId", JsonObject().apply { addProperty("stringValue", dateId) })
+            add("weekId", JsonObject().apply { addProperty("stringValue", weekId) })
+
+            carbon?.let {
+                add("carbon", JsonObject().apply { addProperty("doubleValue", it) })
+            }
+            quiz?.let {
+                add("quiz", JsonObject().apply { addProperty("integerValue", it) })
+            }
+        }
+
         val body = JsonObject().apply { add("fields", fields) }
 
-        // use create with custom id:
-        return@withContext api.createDailyWithId(PROJECT_ID, COLLECTION, weekId, dateId, API_KEY, body)
+        api.patchDocument(
+            projectId = PROJECT_ID,
+            collection = "dailyRecords",
+            documentId = dateId,
+            apiKey = API_KEY,
+            updateMask = fields.keySet().toList(),
+            body = body
+        )
+
+        upsertWeeklyHistory(weekId)
+        updateWeeklyTotalsFromDaily(weekId)
+
+        try {
+            api.patchDocument(
+                projectId = PROJECT_ID,
+                collection = "dailyRecords",
+                documentId = dateId,
+                apiKey = API_KEY,
+                updateMask = fields.keySet().toList(),
+                body = body
+            )
+        } catch (e: Exception) {
+            api.createDocument(
+                projectId = PROJECT_ID,
+                collection = "dailyRecords",
+                apiKey = API_KEY,
+                body = body
+            )
+        }
+        upsertWeeklyHistory(weekId)
     }
+
+
+
 
     suspend fun createDaily(dateId: String, carbon: Float, quiz: Int, weekId: String) =
         withContext(Dispatchers.IO) {
@@ -279,15 +433,46 @@ object EcoTargetRestRepository {
             val result = mutableListOf<EcoTargetRepository.DailyData>()
 
             for (item in response) {
-                val doc = item.asJsonObject["document"]?.asJsonObject ?: continue
-                val fields = doc["fields"].asJsonObject
 
-                val dateId = fields["dateId"].asJsonObject["stringValue"].asString
-                val carbon = fields["carbon"].asJsonObject["doubleValue"].asDouble.toFloat()
-                val quiz = fields["quiz"].asJsonObject["integerValue"].asString.toInt()
+                val documentObj = item.asJsonObject["document"] ?: continue
+                if (!documentObj.isJsonObject) continue
 
-                result.add(EcoTargetRepository.DailyData(dateId, carbon, quiz))
+                val doc = documentObj.asJsonObject
+                val fieldsObj = doc["fields"] ?: continue
+                if (!fieldsObj.isJsonObject) continue
+
+                val fields = fieldsObj.asJsonObject
+
+                val dateId = fields["dateId"]
+                    ?.asJsonObject
+                    ?.get("stringValue")
+                    ?.asString
+                    ?: continue   // ⛔ dateId wajib
+
+                val carbon = fields["carbon"]
+                    ?.asJsonObject
+                    ?.get("doubleValue")
+                    ?.asDouble
+                    ?.toFloat()
+                    ?: 0f
+
+                val quiz = fields["quiz"]
+                    ?.asJsonObject
+                    ?.get("integerValue")
+                    ?.asString
+                    ?.toIntOrNull()
+                    ?: 0
+
+                result.add(
+                    EcoTargetRepository.DailyData(
+                        dateId = dateId,
+                        carbon = carbon,
+                        quiz = quiz,
+                        weekId = weekId
+                    )
+                )
             }
+
 
             result.sortedBy { it.dateId }
         }

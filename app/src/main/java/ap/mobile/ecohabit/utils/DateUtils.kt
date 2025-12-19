@@ -24,4 +24,10 @@ object DateUtils {
         val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMM yyyy")
         return "${start.format(formatter)} – ${end.format(formatter)}"
     }
+    fun shortDateLabel(dateId: String): String {
+        // dateId: yyyy-MM-dd
+        val parts = dateId.split("-")
+        return "${parts[2]}/${parts[1]}" // dd/MM
+    }
+
 }

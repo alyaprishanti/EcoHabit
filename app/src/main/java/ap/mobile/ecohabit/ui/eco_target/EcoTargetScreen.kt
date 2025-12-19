@@ -232,11 +232,13 @@ fun EcoTargetScreen(
                     }
                 }
             }
+
             Column (verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = "Detail Karbon Harian",
                     style = MaterialTheme.typography.titleMedium,
                 )
+
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),

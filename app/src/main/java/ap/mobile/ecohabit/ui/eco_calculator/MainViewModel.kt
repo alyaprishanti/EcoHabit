@@ -70,10 +70,10 @@ class MainViewModel(
 
         viewModelScope.launch {
             EcoTargetRestRepository.createOrUpdateDaily(
-                weekId = weekId,
                 dateId = dateId,
+                weekId = weekId,
                 carbon = result.totalKgCO2e.toFloat(),
-                quiz = 0 // quiz mungkin belum ada
+                quiz = null
             )
         }
     }

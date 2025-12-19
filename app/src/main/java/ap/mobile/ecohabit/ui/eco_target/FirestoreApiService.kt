@@ -34,12 +34,12 @@ interface FirestoreApiService {
     ): JsonObject
 
     // create or set daily document (custom id)
-    @POST("projects/{projectId}/databases/(default)/documents/{weeklyCollection}/{weekId}/daily?documentId={dateId}")
+    @POST("projects/{projectId}/databases/(default)/documents/{weeklyCollection}/{weekId}/daily")
     suspend fun createDailyWithId(
         @Path("projectId") projectId: String,
         @Path("weeklyCollection") weeklyCollection: String,
         @Path("weekId") weekId: String,
-        @Path("dateId") dateId: String, // yyyy-MM-dd
+        @Query("documentId") dateId: String, // ✅ BENAR
         @Query("key") apiKey: String,
         @Body body: JsonObject
     ): JsonObject
@@ -64,6 +64,17 @@ interface FirestoreApiService {
         @Path("projectId") projectId: String,
         @Path("collection") collection: String,
         @Query("key") apiKey: String,
+        @Body body: JsonObject
+    ): JsonObject
+
+    @PATCH("projects/{projectId}/databases/(default)/documents/{weeklyCollection}/{weekId}/daily/{dateId}")
+    suspend fun patchDaily(
+        @Path("projectId") projectId: String,
+        @Path("weeklyCollection") weeklyCollection: String,
+        @Path("weekId") weekId: String,
+        @Path("dateId") dateId: String,
+        @Query("key") apiKey: String,
+        @Query("updateMask.fieldPaths") updateMask: List<String>,
         @Body body: JsonObject
     ): JsonObject
 

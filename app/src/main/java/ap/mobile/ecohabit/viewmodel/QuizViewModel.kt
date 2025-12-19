@@ -16,7 +16,6 @@ import java.util.Date
 import java.util.Locale
 private val db = FirebaseFirestore.getInstance()
 
-
 class QuizViewModel : ViewModel() {
 
     // Daftar soal
@@ -51,8 +50,6 @@ class QuizViewModel : ViewModel() {
     var weeklyProgress = mutableStateOf(0)
     val quizHistory = mutableStateOf<List<QuizHistoryEntry>>(emptyList())
 
-
-
     fun startQuiz() {
         currentIndex.value = 0
         selectedAnswer.value = -1
@@ -65,17 +62,23 @@ class QuizViewModel : ViewModel() {
         val dateId = todayDateId()
         val weekId = currentWeekId()
 
-        // existing firebase save
-        db.collection("quiz_results")
-            .add(data)
-            .addOnSuccessListener {
+        // ✅ DATA HARUS MAP / OBJECT
+        val quizData = mapOf(
+            "score" to scoreValue,
+            "dateId" to dateId,
+            "weekId" to weekId,
+            "createdAt" to System.currentTimeMillis()
+        )
 
-                // 🔽 TAMBAHAN DAILY RECORD
+        db.collection("quiz_results")
+            .add(quizData)
+            .addOnSuccessListener {
+                // 🔽 UPDATE DAILY RECORD (EcoTarget)
                 viewModelScope.launch {
                     EcoTargetRestRepository.createOrUpdateDaily(
-                        weekId = weekId,
                         dateId = dateId,
-                        carbon = 0f, // carbon mungkin sudah diisi calculator
+                        weekId = weekId,
+                        carbon = null,
                         quiz = scoreValue
                     )
                 }
@@ -95,7 +98,6 @@ class QuizViewModel : ViewModel() {
             score.value -= 3
             streak.value = 0
         }
-
         return isCorrect
     }
 

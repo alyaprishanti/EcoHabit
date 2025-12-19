@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material.*
-
 import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -315,7 +314,7 @@ fun HomeScreen(
 
                     // Kolom kiri (index 0–2)
                     Column(modifier = Modifier.weight(1f)) {
-                        for (idx in 0..2) {
+                        for (idx in foodItems.indices.filter { it <= 2 }) {
                             FoodCheckItem(
                                 name = foodItems[idx],
                                 checked = foodChecked[idx],
@@ -333,7 +332,7 @@ fun HomeScreen(
 
                     // Kolom kanan (index 3–5)
                     Column(modifier = Modifier.weight(1f)) {
-                        for (idx in 3..5) {
+                        for (idx in foodItems.indices.filter { it >= 3 }) {
                             FoodCheckItem(
                                 name = foodItems[idx],
                                 checked = foodChecked[idx],
@@ -363,7 +362,7 @@ fun HomeScreen(
                     val foodMap = mutableMapOf<String, Double>()
                     for (i in foodItems.indices) {
                         if (foodChecked[i]) {
-                            val g = foodGrams[i].toDoubleOrNull() ?: 0.0
+                            val g = foodGrams.getOrNull(i)?.toDoubleOrNull() ?: 0.0
                             foodMap[foodItems[i]] = g
                         }
                     }
@@ -429,6 +428,7 @@ fun HomeScreen(
                     fontWeight = FontWeight.SemiBold
                 )
             }
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
